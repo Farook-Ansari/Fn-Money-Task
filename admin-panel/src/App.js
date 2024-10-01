@@ -9,7 +9,7 @@ const App = () => (
     <Routes>
       <Route path="/signin" element={<Login />} />
       <Route path="/signup" element={<Register />} />
-      <Route path="/*" element={<DashboardLayoutAccount />} />  {/* Nested routing happens in DashboardLayout */}
+      <Route path="/*" element={<DashboardLayoutAccount />} />  
     </Routes>
   </BrowserRouter>
 );

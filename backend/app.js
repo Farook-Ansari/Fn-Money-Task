@@ -2,19 +2,20 @@ const express = require('express');
 const mongoose = require('mongoose');
 const productRouter = require("./routes/Product-routes");
 const categoryRouter = require("./routes/Category-routes");
-const authRouter = require("./routes/auth"); // Add this line
+const authRouter = require("./routes/auth"); 
 
 const app = express();
 const cors = require('cors');
 app.use(cors());
 
-// Middleware
-app.use(express.json());  
-app.use("/products", productRouter);  // Public product routes
-app.use("/categories", categoryRouter);  // Public category routes
-app.use("/api/auth", authRouter); // Add this line to use the auth routes
+app.use(express.json());
 
-// MongoDB connection
+const path = require('path');
+app.use('/images', express.static(path.join(__dirname, 'uploads')));
+app.use("/products", productRouter);  
+app.use("/categories", categoryRouter);  
+app.use("/api/auth", authRouter); 
+
 mongoose.connect("mongodb+srv://ansari:Vi2IFYUdkO4wUGp3@cluster0.zy5rj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
     .then(() => console.log("Connected to DB"))
     .then(() => {

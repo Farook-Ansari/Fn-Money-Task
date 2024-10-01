@@ -14,16 +14,37 @@ import {
   Grid,
   TableContainer,
   IconButton,
+  TableSortLabel,
+  Box,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { visuallyHidden } from '@mui/utils';
+
+function descendingComparator(a, b, orderBy) {
+  if (b[orderBy] < a[orderBy]) {
+    return -1;
+  }
+  if (b[orderBy] > a[orderBy]) {
+    return 1;
+  }
+  return 0;
+}
+
+function getComparator(order, orderBy) {
+  return order === 'desc'
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
+}
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('categoryName');
   const [newCategory, setNewCategory] = useState({
     categoryName: '',
     categoryDescription: '',
-    categoryImageUrl: '',
+    categoryImage: null, 
   });
   const [showAddForm, setShowAddForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -38,8 +59,14 @@ const CategoryList = () => {
       const response = await axios.get('http://localhost:5000/categories');
       setCategories(response.data.categories);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching categories:', err);
     }
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
   };
 
   const handleAddCategory = async () => {
@@ -48,25 +75,38 @@ const CategoryList = () => {
       return;
     }
 
+    const formData = new FormData();
+    formData.append('categoryName', newCategory.categoryName);
+    formData.append('categoryDescription', newCategory.categoryDescription);
+    if (newCategory.categoryImage) {
+      formData.append('categoryImage', newCategory.categoryImage); 
+    }
+
     try {
       if (isEditing) {
-        // Update existing category
-        await axios.put(`http://localhost:5000/categories/${editCategoryId}`, newCategory);
+        await axios.put(`http://localhost:5000/categories/${editCategoryId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       } else {
-        // Add new category
-        await axios.post('http://localhost:5000/categories', newCategory);
+        await axios.post('http://localhost:5000/categories', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       }
 
       setNewCategory({
         categoryName: '',
         categoryDescription: '',
-        categoryImageUrl: '',
+        categoryImage: null,
       });
       fetchCategories();
       setShowAddForm(false);
       setIsEditing(false);
     } catch (err) {
-      console.error(err);
+      console.error('Error adding/updating category:', err);
     }
   };
 
@@ -74,56 +114,59 @@ const CategoryList = () => {
     setNewCategory({
       categoryName: category.categoryName,
       categoryDescription: category.categoryDescription,
-      categoryImageUrl: category.categoryImageUrl,
+      categoryImage: null, 
     });
     setEditCategoryId(category._id);
     setIsEditing(true);
     setShowAddForm(true);
   };
 
-  const handleDeleteCategory = async (categoryId) => {
+  const handleDeleteCategory = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/categories/${categoryId}`);
-      fetchCategories();
+      const response = await axios.delete(`http://localhost:5000/categories/${id}`);
+      console.log("Category deleted successfully:", response.data);
     } catch (err) {
-      console.error(err);
+      console.error("Error deleting category:", err.response || err);
     }
   };
+  
 
- // Modal styles
- const styles = {
-  modal: {
-    display: 'flex',
-    position: 'fixed',
-    zIndex: 1,
-    left: 0,
-    top: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#2e2e2e', // Dark theme for modal content
-    width: '400px',
-    padding: '20px',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    color: '#fff', // White text color for dark background
-  },
-  addButton: {
-    backgroundColor: '#4caf50',
-    color: '#fff',
-  },
-  closeButton: {
-    backgroundColor: '#f44336',
-    color: '#fff',
-  },
-  inputField: {
-    marginBottom: '10px',
-  },
-};
+  const visibleCategories = [...categories].sort(getComparator(order, orderBy));
+
+  const styles = {
+    modal: {
+      display: 'flex',
+      position: 'fixed',
+      zIndex: 1,
+      left: 0,
+      top: 0,
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      width: '400px',
+      padding: '20px',
+      borderRadius: '8px',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+      color: 'black',
+    },
+    addButton: {
+      backgroundColor: '#4caf50',
+      color: '#fff',
+      marginRight: '10px',
+    },
+    closeButton: {
+      backgroundColor: '#f44336',
+      color: '#fff',
+    },
+    inputField: {
+      marginBottom: '10px',
+    },
+  };
 
   return (
     <Container maxWidth="lg">
@@ -140,11 +183,10 @@ const CategoryList = () => {
             setNewCategory({
               categoryName: '',
               categoryDescription: '',
-              categoryImageUrl: '',
+              categoryImage: null,
             });
           }}
-          style={{ marginBottom: '20px' }}
-        >
+          style={{ marginBottom: '20px', marginLeft:'900px', marginTop:'-70px'}}        >
           {showAddForm ? 'Hide Add Category Form' : 'Add New Category'}
         </Button>
 
@@ -161,6 +203,7 @@ const CategoryList = () => {
                     fullWidth
                     value={newCategory.categoryName}
                     onChange={(e) => setNewCategory({ ...newCategory, categoryName: e.target.value })}
+                    style={styles.inputField}
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -169,20 +212,20 @@ const CategoryList = () => {
                     fullWidth
                     value={newCategory.categoryDescription}
                     onChange={(e) => setNewCategory({ ...newCategory, categoryDescription: e.target.value })}
+                    style={styles.inputField}
                   />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField
-                    label="Image URL"
-                    fullWidth
-                    value={newCategory.categoryImageUrl}
-                    onChange={(e) => setNewCategory({ ...newCategory, categoryImageUrl: e.target.value })}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setNewCategory({ ...newCategory, categoryImage: e.target.files[0] })}
+                    style={{ marginBottom: '10px' }}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <Button
                     variant="contained"
-                    color="primary"
                     onClick={handleAddCategory}
                     style={styles.addButton}
                   >
@@ -190,8 +233,8 @@ const CategoryList = () => {
                   </Button>
                   <Button
                     variant="outlined"
-                    color="secondary"
                     onClick={() => setShowAddForm(false)}
+                    style={styles.closeButton}
                   >
                     Close
                   </Button>
@@ -201,35 +244,67 @@ const CategoryList = () => {
           </div>
         )}
 
-        {/* Category List Table */}
         <TableContainer component={Paper}>
-          <Table>
+          <Table aria-label="category table">
             <TableHead>
               <TableRow>
-                <TableCell>Category</TableCell>
-                <TableCell>Description</TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={orderBy === 'categoryName'}
+                    direction={orderBy === 'categoryName' ? order : 'asc'}
+                    onClick={() => handleRequestSort('categoryName')}
+                  >
+                    Category Name
+                    {orderBy === 'categoryName' ? (
+                      <Box component="span" sx={visuallyHidden}>
+                        {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                      </Box>
+                    ) : null}
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={orderBy === 'categoryDescription'}
+                    direction={orderBy === 'categoryDescription' ? order : 'asc'}
+                    onClick={() => handleRequestSort('categoryDescription')}
+                  >
+                    Description
+                    {orderBy === 'categoryDescription' ? (
+                      <Box component="span" sx={visuallyHidden}>
+                        {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                      </Box>
+                    ) : null}
+                  </TableSortLabel>
+                </TableCell>
                 <TableCell>Image</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {categories.map((category) => (
+              {visibleCategories.map((category) => (
                 <TableRow key={category._id}>
                   <TableCell>{category.categoryName}</TableCell>
                   <TableCell>{category.categoryDescription}</TableCell>
                   <TableCell>
-                    <img
-                      src={category.categoryImageUrl}
-                      alt={category.categoryName}
-                      style={{ width: '50px', borderRadius: '4px' }}
-                    />
+                    {category.categoryImage && (
+                     <img
+                     src={`http://localhost:5000/images/${category.categoryImage}`}
+                     alt={category.categoryName}
+                     width="50"
+                     height="50"
+                   />                            
+                    )}
                   </TableCell>
                   <TableCell>
-                    <IconButton color="primary" onClick={() => handleEditCategory(category)}>
-                      <EditIcon />
+                    <IconButton
+                      onClick={() => handleEditCategory(category)}
+                    >
+                      <EditIcon style={{color:'blue'}}/>
                     </IconButton>
-                    <IconButton color="secondary" onClick={() => handleDeleteCategory(category._id)}>
-                      <DeleteIcon />
+                    <IconButton
+                      onClick={() => handleDeleteCategory(category._id)}
+                    >
+                      <DeleteIcon style={{color:'red'}} />
                     </IconButton>
                   </TableCell>
                 </TableRow>

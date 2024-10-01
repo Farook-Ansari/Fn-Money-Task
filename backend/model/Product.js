@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
+// Product Schema
 const productSchema = new Schema({
     productName: {
         type: String,
         trim: true,
+        required: true,
     },
     productDescription: {
         type: String,
@@ -14,36 +16,54 @@ const productSchema = new Schema({
         type: String,
         ref: 'Category',
         required: true,
-        
     },
+    productPrice:{
+        type: Number, 
+   },
     productImage: {
         type: String,
+        required: true, 
+        default: ""     
     },
     productVariant: {
         type: String,
-        default: null,
     },
-    inventoryDetails: {
-        quantity: { type: Number, default: 0 },
-        warehouseLocation: { type: String, trim: true },
+
+    productQuantity:{
+         type: Number, 
     },
-    taxDetails: {
-        taxCode: { type: String, trim: true },
-        taxPercentage: { type: Number, default: 0 },
-    },
+    warehouseLocation:{
+        type: String, 
+        trim: true
+   },
+
+    taxPercentage:{
+        type: Number, 
+   },
+   taxCode:{
+       type: String, 
+       trim: true
+  },
+
     productStatus: {
         type: String,
-        enum: ["Active", "Inactive"],
-        default: "Active",
+        enum: ["Available", "Sold"],
+        default: "Available",
     },
-    shippingDetails: {
-        weight: { type: Number, },
-        dimensions: {
-            length: { type: Number,  },
-            width: { type: Number,  },
-            height: { type: Number, },
-        },
+    productweight:{
+        type: Number, 
+   },
+   productlength:{
+    type: Number, 
     },
+    productwidth:{
+        type: Number, 
+   },
+   productheight:{
+    type: Number, 
+    },
+
+    
     returnAndReplacement: {
         type: String,
         enum: ["No Return", "7 Days Replacement", "30 Days Return"],

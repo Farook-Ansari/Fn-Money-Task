@@ -1,17 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const categoryController = require("../controllers/Category-controller");
+const multer = require('multer'); 
 
-// Route to get all categories
+
+const upload = multer({ dest: 'uploads/' });
+
 router.get('/', categoryController.getAllCategories);
 
-// Route to add a new category (with image upload)
-router.post('/', categoryController.addCategory);
+router.get('/:id', categoryController.getCategory);
 
-// Route to update a category by ID (with image upload)
-router.put('/:id', categoryController.updateCategory);
+router.post('/', upload.single('categoryImage'), categoryController.addCategory);
 
-// Route to delete a category by ID
+router.put('/:id', upload.single('categoryImage'), categoryController.updateCategory);
+
 router.delete('/:id', categoryController.deleteCategory);
 
 module.exports = router;

@@ -36,8 +36,8 @@ function DashboardLayoutAccount(props) {
         navigate('/dashboard/productlist'); 
       },
       signOut: () => {
-        setSession(null);  // Clear session
-        navigate('/login'); // Redirect to login page
+        setSession(null);  
+        navigate('/login'); 
       },
     }),
     [navigate]
@@ -51,7 +51,7 @@ function DashboardLayoutAccount(props) {
       window={window}
     >
       <div className='nav' style={{display:'flex', borderBottom:'2px solid rgba(0, 0, 0, 0.12)'}}>
-        <h1 style={{marginRight:'30cm', marginLeft:'3cm'}}>Toolkit</h1>
+        <h1 style={{marginRight:'30cm', marginLeft:'3cm'}}>Fn Store</h1>
         <button 
           style={{width:'80px', height:'35px', marginTop:'30px', backgroundColor: '#3378bc', color: 'white', borderRadius:'10px'}}
           onClick={authentication.signOut}

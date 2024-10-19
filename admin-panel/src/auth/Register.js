@@ -37,12 +37,12 @@ const Register = () => {
             return;
         }
 
-        console.log({ name, email, password }); // Log the values to verify
+        console.log({ name, email, password }); 
 
         try {
             const response = await axios.post('http://localhost:5000/api/auth/register', { name, email, password });
             console.log('Registration successful', response.data);
-            navigate('/signin'); // Redirect to the login page
+            navigate('/signin'); 
         } catch (err) {
             console.error(err.response?.data || 'An error occurred');
             setError('Registration failed');
